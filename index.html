@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Behind the scenes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky: #68aee9;
+    --ink: #0b0b0c;
+    --paper: #fbf7f6;
+    /* one unit drives the whole polaroid stack so it scales with the viewport */
+    --cw: clamp(92px, min(15.65vw, 29.8vh), 340px);
+    --spread: 1;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--sky);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .bts {
+    position: relative;
+    height: 100vh;
+    height: 100svh;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    background: var(--sky);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* ---------- copy ---------- */
+  .bts__title {
+    font-size: clamp(34px, min(3.75vw, 7.15vh), 86px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    text-align: center;
+    -webkit-text-stroke: 0.012em currentColor;
+  }
+
+  .bts__text {
+    max-width: 32.5em;
+    margin-top: 1.3em;
+    font-size: clamp(14.5px, min(1.197vw, 2.282vh), 27px);
+    font-weight: 400;
+    line-height: 1.537;
+    text-align: center;
+  }
+
+  /* ---------- polaroid stack ---------- */
+  .stack {
+    position: relative;
+    width: 100%;
+    height: calc(var(--cw) * 1.55);
+    margin-top: clamp(40px, 7.4vh, 90px);
+    flex-shrink: 0;
+  }
+
+  .card {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.217);
+    margin-left: calc(var(--cw) / -2);
+    padding: calc(var(--cw) * 0.027);
+    border-radius: calc(var(--cw) * 0.095);
+    background: var(--paper);
+    box-shadow:
+      0 calc(var(--cw) * 0.012) calc(var(--cw) * 0.02) rgba(20, 45, 80, 0.14),
+      0 calc(var(--cw) * 0.04) calc(var(--cw) * 0.09) rgba(20, 45, 80, 0.16);
+    cursor: pointer;
+    transform:
+      translate(calc((var(--x) * var(--spread) + var(--dx, 0)) * var(--cw)),
+                calc((var(--y) + var(--dy, 0)) * var(--cw)))
+      rotate(calc(var(--r) + var(--dr, 0deg)))
+      scale(var(--s, 1));
+    transition: transform 0.6s cubic-bezier(0.34, 1.36, 0.5, 1);
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card img {
+    display: block;
+    width: 100%;
+    height: calc(var(--cw) * var(--ph, 1));
+    object-fit: cover;
+    border-radius: calc(var(--cw) * 0.072);
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  .card figcaption {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: calc(var(--cw) * 0.012);
+    font-family: "Nanum Pen Script", "Bradley Hand", cursive;
+    font-size: calc(var(--cw) * 0.118);
+    letter-spacing: 0.09em;
+    line-height: 1;
+    text-align: center;
+    color: #111;
+  }
+
+  .card:nth-child(1) { --x: -1.17; --y: 0.19; --r: -20deg; z-index: 1; }
+  .card:nth-child(2) { --x: -0.57; --y: 0.19; --r: -7deg;  z-index: 2; }
+  .card:nth-child(3) { --x: 0.01;  --y: 0;    --r: 0deg;   z-index: 3; }
+  .card:nth-child(4) { --x: 0.62;  --y: 0.15; --r: 7deg;   z-index: 5; --ph: 1.03; }
+  .card:nth-child(5) { --x: 1.19;  --y: 0.24; --r: 16deg;  z-index: 4; }
+
+  /* ---------- floating camera + cloud ---------- */
+  .float {
+    position: absolute;
+    top: clamp(-10px, 1vh, 20px);
+    right: clamp(-70px, -1.2vw, -10px);
+    width: clamp(120px, 23vw, 460px);
+    aspect-ratio: 1.3;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .cloud {
+    position: absolute;
+    inset: 0;
+    filter: blur(calc(clamp(120px, 23vw, 460px) * 0.045));
+    opacity: 0.62;
+  }
+  .cloud i {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 45% 40%, #fff 0%, rgba(255,255,255,0.85) 45%, rgba(255,255,255,0) 72%);
+  }
+  .cloud i:nth-child(1) { left: 42%; top: -22%; width: 62%; height: 80%; }
+  .cloud i:nth-child(2) { left: 14%; top: 22%;  width: 52%; height: 58%; }
+  .cloud i:nth-child(3) { left: 58%; top: 18%;  width: 60%; height: 66%; opacity: 0.8; }
+  .cloud i:nth-child(4) { left: 0;   top: 44%;  width: 40%; height: 40%; opacity: 0.7; }
+
+  .camera {
+    position: absolute;
+    right: 3%;
+    top: 22%;
+    width: 52%;
+    filter: blur(0.6px) drop-shadow(0 10px 18px rgba(30, 60, 100, 0.18));
+    animation: bob 5s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(5%) rotate(9deg); }
+    50%      { transform: translateY(-9%) rotate(4deg); }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    :root { --cw: clamp(92px, min(21vw, 24vh), 220px); --spread: 0.9; }
+    .bts__title { font-size: clamp(32px, min(6.6vw, 6vh), 56px); }
+    .bts__text  { font-size: clamp(14px, min(2.3vw, 2.2vh), 20px); }
+  }
+
+  @media (max-width: 560px) {
+    :root { --cw: clamp(84px, min(27vw, 22vh), 170px); --spread: 0.82; }
+    .bts { padding: 0 20px; }
+    .bts__title { font-size: clamp(30px, min(9.4vw, 5.6vh), 44px); }
+    .bts__text  { font-size: clamp(13px, min(3.9vw, 2.15vh), 17px); margin-top: 1.3em; line-height: 1.5; }
+    .stack { margin-top: clamp(26px, 5vh, 56px); }
+    .float { width: 46vw; top: -2vh; right: -12vw; opacity: 0.9; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .camera { animation: none; transform: rotate(8deg); }
+    .card { transition-duration: 0.01s; }
+  }
+</style>
+</head>
+<body>
+
+<section class="bts" aria-labelledby="bts-title">
+
+  <div class="float" aria-hidden="true">
+    <div class="cloud"><i></i><i></i><i></i><i></i></div>
+    <img class="camera" src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122111_e41ea127-4604-49d8-bce5-e8b7d8841635.png" alt="">
+  </div>
+
+  <h1 class="bts__title" id="bts-title">Behind the scenes</h1>
+
+  <p class="bts__text">
+    Hey there! I'm Zsolt, a web designer from Budapest. I got hooked on design as a kid playing around with Photoshop and haven't looked back since. I like to keep things zen (pun intended), making the whole design process smooth and stress-free for both of us. It's all about creating great websites without the headaches. Here are some snapshots from my life so you can put a face to the name:
+  </p>
+
+  <div class="stack" id="stack">
+    <figure class="card">
+      <img src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122108_7fef0ae8-7c1e-410f-82e0-243b2a8aa0a8.png" alt="A rustic beach with a wooden lifeguard hut" loading="eager">
+    </figure>
+    <figure class="card">
+      <img src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122112_66b07c10-4568-43f9-9d2d-62ea7537d105.png" alt="Corner booth of a small cafe" loading="eager">
+    </figure>
+    <figure class="card">
+      <img src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122109_d46ade14-096e-49e5-9bc6-539958465045.png" alt="A marina full of boats under a deep blue sky" loading="eager">
+    </figure>
+    <figure class="card">
+      <img src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122108_d324d813-528b-4f56-84a2-ec638bcee615.png" alt="Smiling man in a floral shirt on the beach" loading="eager">
+      <figcaption>malta 2024</figcaption>
+    </figure>
+    <figure class="card">
+      <img src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261010_122111_d41a5072-d137-4554-b2c8-3106e15a351c.png" alt="Suitcases and backpacks in a hotel lobby" loading="eager">
+    </figure>
+  </div>
+
+</section>
+
+<script>
+  (function () {
+    var stack = document.getElementById('stack');
+    var cards = Array.prototype.slice.call(stack.querySelectorAll('.card'));
+    var last = cards.length - 1;
+    var STEP = 0.28;   // how far each card slides, in card widths
+    var PUSH = 0.3;    // extra nudge for the card right after the hovered one
+
+    function open(h) {
+      cards.forEach(function (card, j) {
+        var dx = 0, dy = 0, dr = '0deg', s = 1;
+        if (j < h) {
+          dx = -STEP * j;
+        } else if (j > h) {
+          dx = STEP * (last - j) + (j === last && h !== 0 ? PUSH : 0);
+        } else {
+          dx = h === 0 ? -0.05 : h === last ? 0.05 : -STEP * (j - 0.4);
+          dy = -0.04;
+          dr = (j < last / 2 ? 2 : j > last / 2 ? -2 : 0) + 'deg';
+          s = 1.04;
+        }
+        card.style.setProperty('--dx', dx);
+        card.style.setProperty('--dy', dy);
+        card.style.setProperty('--dr', dr);
+        card.style.setProperty('--s', s);
+      });
+    }
+
+    function reset() {
+      cards.forEach(function (card) {
+        ['--dx', '--dy', '--dr', '--s'].forEach(function (p) { card.style.removeProperty(p); });
+      });
+    }
+
+    cards.forEach(function (card, i) {
+      card.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') open(i); });
+      card.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') reset(); });
+      card.addEventListener('click', function (e) { e.stopPropagation(); open(i); });
+    });
+    document.addEventListener('click', reset);
+  })();
+</script>
+</body>
+</html>
